@@ -1,0 +1,23 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jab125 <67534807+Jab125@users.noreply.github.com>
+Date: Sat, 13 May 2023 21:16:35 +1000
+Subject: [PATCH] Output preprocess version
+
+
+diff --git a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessPlugin.kt b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessPlugin.kt
+index bb0a75131fc2658649c05b8d9d612b198299d73f..db52b53dbf1c92a6014d240778248799e060f4f0 100644
+--- a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessPlugin.kt
++++ b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessPlugin.kt
+@@ -22,7 +22,12 @@ import java.nio.file.Path
+ import java.util.stream.Collectors
+ 
+ class PreprocessPlugin : Plugin<Project> {
++    val PREPROCESS_VERSION: String
++        get() {
++            return PreprocessPlugin::class.java.getPackage().getImplementationVersion() ?: "0.0.0"
++        }
+     override fun apply(project: Project) {
++        project.logger.lifecycle("Preprocess $PREPROCESS_VERSION")
+         val parent = project.parent
+         if (parent == null) {
+             project.apply<RootPreprocessPlugin>()

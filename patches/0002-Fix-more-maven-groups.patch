@@ -1,0 +1,24 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jab125 <67534807+Jab125@users.noreply.github.com>
+Date: Sat, 13 May 2023 21:12:56 +1000
+Subject: [PATCH] Fix more maven groups
+
+
+diff --git a/build.gradle.kts b/build.gradle.kts
+index e32e8cc37c5e9d20293d33605654ec8179e1c66c..426712c3693a7e603227782a8803f175c07cc8c6 100644
+--- a/build.gradle.kts
++++ b/build.gradle.kts
+@@ -28,11 +28,11 @@ val kotestVersion: String by project.extra
+ gradlePlugin {
+     plugins {
+         register("preprocess") {
+-            id = "com.replaymod.preprocess"
++            id = "com.jab125.preprocess"
+             implementationClass = "com.replaymod.gradle.preprocess.PreprocessPlugin"
+         }
+         register("preprocess-root") {
+-            id = "com.replaymod.preprocess-root"
++            id = "com.jab125.preprocess-root"
+             implementationClass = "com.replaymod.gradle.preprocess.RootPreprocessPlugin"
+         }
+     }

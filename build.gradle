@@ -1,0 +1,12 @@
+plugins {
+    id 'net.minecraftforge.gitpatcher' version '0.10.+'
+}
+
+patches {
+    // The submodule path you just created
+    submodule = 'preprocessor'
+    // The target folder for the patched repositories
+    target = file('preprocessor-plus')
+    // The folder where the patches are saved
+    patches = file('patches')
+}

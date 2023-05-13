@@ -1,0 +1,17 @@
+/*
+
+!/patches
+!/build.gradle
+!/gradle.properties
+!/.gitignore
+!/.gitmodules
+!/gradlew
+!/gradlew.bat
+!/settings.gradle
+!/gradle
+!/preprocessor
+!/LICENSE
+
+
+### Mac OS ###
+.DS_Store

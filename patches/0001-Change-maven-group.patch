@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jab125 <67534807+Jab125@users.noreply.github.com>
+Date: Sat, 13 May 2023 20:20:49 +1000
+Subject: [PATCH] Change maven group
+
+
+diff --git a/build.gradle.kts b/build.gradle.kts
+index 26a5b10dfc184a47f2065b3649b10b210626d16c..e32e8cc37c5e9d20293d33605654ec8179e1c66c 100644
+--- a/build.gradle.kts
++++ b/build.gradle.kts
+@@ -20,7 +20,7 @@ plugins {
+     groovy
+ }
+ 
+-group = "com.github.replaymod"
++group = "com.jab125" // this is a fork
+ version = "SNAPSHOT"
+ 
+ val kotestVersion: String by project.extra

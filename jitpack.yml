@@ -1,8 +1,18 @@
-script: |
-  ./gradlew applyPatches
-  cd preprocessor-plus
-  ./gradlew build
-  ./gradlew test
+before_install: |
+  echo Stage 0
+  git init
+  echo "$PWD"
+  echo Stage 1
 install: |
+  echo "$PWD"
+  echo Stage 2
+  ./gradlew applyPatches
+  echo "$PWD"
+  echo Stage 3
   cd preprocessor-plus
-  ./gradlew publishToMavenLocal
+  echo "$PWD"
+  echo Stage 4
+  echo Publishing to maven
+  echo "$PWD"
+  echo Stage 5
+  ./gradlew build test publishToMavenLocal

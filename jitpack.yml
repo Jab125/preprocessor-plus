@@ -1,0 +1,5 @@
+script: |
+  ./gradlew applyPatches
+  cd preprocessor-plus
+  ./gradlew build
+  ./gradlew test

@@ -1,0 +1,42 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jab125 <67534807+Jab125@users.noreply.github.com>
+Date: Sun, 14 May 2023 19:32:27 +1000
+Subject: [PATCH] Fix manifest
+
+
+diff --git a/build.gradle.kts b/build.gradle.kts
+index 2ce2b8f4ef56c7eb411409b6dc2c5a9f79f09d84..529940b6609b03c6d1dfbd622a9b6b2b59beaf9f 100644
+--- a/build.gradle.kts
++++ b/build.gradle.kts
+@@ -21,7 +21,7 @@ plugins {
+ }
+ 
+ group = "com.jab125" // this is a fork
+-version = "SNAPSHOT"
++version = "0.1.0"
+ 
+ val kotestVersion: String by project.extra
+ 
+@@ -41,11 +41,6 @@ gradlePlugin {
+ java {
+     sourceCompatibility = JavaVersion.VERSION_1_8
+     targetCompatibility = JavaVersion.VERSION_1_8
+-
+-    manifest {
+-        attributes["Implementation-Version"] = project.version
+-    }
+-
+ }
+ 
+ tasks.withType<Test> {
+@@ -67,3 +62,9 @@ dependencies {
+     testImplementation("io.kotest:kotest-runner-junit5-jvm:$kotestVersion")
+     testImplementation("io.kotest:kotest-assertions-core-jvm:$kotestVersion")
+ }
++
++tasks.named<Jar>("jar") {
++    manifest {
++        attributes["Implementation-Version"] = project.version
++    }
++}
+\ No newline at end of file

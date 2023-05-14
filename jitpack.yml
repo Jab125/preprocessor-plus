@@ -3,3 +3,6 @@ script: |
   cd preprocessor-plus
   ./gradlew build
   ./gradlew test
+install: |
+  cd preprocessor-plus
+  ./gradlew publishToMavenLocal

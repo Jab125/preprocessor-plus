@@ -2,6 +2,8 @@ plugins {
     id 'net.minecraftforge.gitpatcher' version '0.10.+'
 }
 
+group = "com.jab125"
+
 patches {
     // The submodule path you just created
     submodule = 'preprocessor'

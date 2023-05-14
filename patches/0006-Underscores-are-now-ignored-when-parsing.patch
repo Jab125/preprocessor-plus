@@ -1,0 +1,46 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jab125 <67534807+Jab125@users.noreply.github.com>
+Date: Sun, 14 May 2023 19:45:35 +1000
+Subject: [PATCH] Underscores are now ignored when parsing
+
+
+diff --git a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessTask.kt b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessTask.kt
+index eddd4a6604b91ecbba72da0e2f627a3fe09d4117..2f403e11293a16ddedda05115141fab2b72d633e 100644
+--- a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessTask.kt
++++ b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessTask.kt
+@@ -312,8 +312,13 @@ class CommentPreprocessor(private val vars: Map<String, Int>) {
+ 
+     var fail = false
+ 
+-    private fun String.evalVarOrNull() = toIntOrNull() ?: vars[this]
+-    private fun String.evalVar() = evalVarOrNull() ?: throw NoSuchElementException(this)
++    private fun String.evalVarOrNull() = cleanUp().toIntOrNull() ?: vars[this]
++    private fun String.evalVar() = cleanUp().evalVarOrNull() ?: throw NoSuchElementException(this)
++
++    private fun String.cleanUp() : String {
++        if (this.startsWith('_')) return this
++        return this.replace("_", "", false)
++    }
+ 
+     internal fun String.evalExpr(): Boolean {
+         split(OR_PATTERN).let { parts ->
+diff --git a/src/test/kotlin/com/replaymod/gradle/preprocess/PreprocessorTests.kt b/src/test/kotlin/com/replaymod/gradle/preprocess/PreprocessorTests.kt
+index dfdc902d6154630628a1adc5dc12b3b568cd0df6..1b3d34bcfb91860675580b92024e1468daa8fbe3 100644
+--- a/src/test/kotlin/com/replaymod/gradle/preprocess/PreprocessorTests.kt
++++ b/src/test/kotlin/com/replaymod/gradle/preprocess/PreprocessorTests.kt
+@@ -89,6 +89,15 @@ class PreprocessorTests : FunSpec({
+             test("unknown variables should throw") {
+                 shouldThrow<NoSuchElementException> { "invalid == 0".evalExpr() }
+             }
++            test("underscore should be ignored") {
++                "15_000_000 == 15_000_000".evalExpr().shouldBeTrue()
++                "15_000_000 == 15_00_00_00".evalExpr().shouldBeTrue()
++                shouldThrow<NoSuchElementException> {  "15@000@000 == 15@000@000".evalExpr() }
++            }
++
++            test("underscore being at the beginning should not be removed") {
++                shouldThrow<NoSuchElementException> { "_15_000_000 == 15_000_000".evalExpr() }
++            }
+         }
+         context("convertSource") {
+             fun String.convert() = convertSource(

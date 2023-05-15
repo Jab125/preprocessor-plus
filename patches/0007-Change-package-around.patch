@@ -1,0 +1,51 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jab125 <67534807+Jab125@users.noreply.github.com>
+Date: Mon, 15 May 2023 21:48:25 +1000
+Subject: [PATCH] Change package around
+
+
+diff --git a/build.gradle.kts b/build.gradle.kts
+index 529940b6609b03c6d1dfbd622a9b6b2b59beaf9f..2c3f5a5986f144af0acd6933bdbecfb614e8ca3c 100644
+--- a/build.gradle.kts
++++ b/build.gradle.kts
+@@ -13,14 +13,14 @@
+  * You should have received a copy of the GNU General Public License
+  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  */
+-
++import java.net.URI
+ plugins {
+     `kotlin-dsl`
+     `maven-publish`
+     groovy
+ }
+ 
+-group = "com.jab125" // this is a fork
++group = "com.jab125.preprocessor" // this is a fork
+ version = "0.1.0"
+ 
+ val kotestVersion: String by project.extra
+@@ -28,11 +28,11 @@ val kotestVersion: String by project.extra
+ gradlePlugin {
+     plugins {
+         register("preprocess") {
+-            id = "com.jab125.preprocess"
++            id = "com.jab125.preprocessor.preprocess"
+             implementationClass = "com.replaymod.gradle.preprocess.PreprocessPlugin"
+         }
+         register("preprocess-root") {
+-            id = "com.jab125.preprocess-root"
++            id = "com.jab125.preprocessor.preprocess-root"
+             implementationClass = "com.replaymod.gradle.preprocess.RootPreprocessPlugin"
+         }
+     }
+@@ -67,4 +67,8 @@ tasks.named<Jar>("jar") {
+     manifest {
+         attributes["Implementation-Version"] = project.version
+     }
++}
++
++publishing {
++    setupRepositories(repositories)
+ }
+\ No newline at end of file

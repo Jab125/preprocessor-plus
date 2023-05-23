@@ -1,0 +1,42 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jab125 <67534807+Jab125@users.noreply.github.com>
+Date: Tue, 23 May 2023 23:09:14 +1000
+Subject: [PATCH] Ignore some errors
+
+WILL BE REVERTED LATER
+
+diff --git a/build.gradle.kts b/build.gradle.kts
+index 2c3f5a5986f144af0acd6933bdbecfb614e8ca3c..d259ffff0c34bd3d84a7cbe768a865fb58383663 100644
+--- a/build.gradle.kts
++++ b/build.gradle.kts
+@@ -21,7 +21,7 @@ plugins {
+ }
+ 
+ group = "com.jab125.preprocessor" // this is a fork
+-version = "0.1.0"
++version = "0.1.1"
+ 
+ val kotestVersion: String by project.extra
+ 
+diff --git a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessPlugin.kt b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessPlugin.kt
+index db52b53dbf1c92a6014d240778248799e060f4f0..d794fdbf3f2cb6110df8ce75cb2d1b2afcf85328 100644
+--- a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessPlugin.kt
++++ b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessPlugin.kt
+@@ -65,7 +65,7 @@ class PreprocessPlugin : Plugin<Project> {
+             val reverseMappings = (inheritedLink != null) != mappingFileInverted
+             val inherited = parent.evaluationDependsOn(inheritedNode.project)
+ 
+-            project.the<SourceSetContainer>().configureEach {
++            project.the<SourceSetContainer>().configureEach { try {
+                 val inheritedSourceSet = inherited.the<SourceSetContainer>()[name]
+                 val cName = if (name == "main") "" else name.capitalize()
+                 val overwritesKotlin = project.file("src/$name/kotlin").also { it.mkdirs() }
+@@ -132,7 +132,7 @@ class PreprocessPlugin : Plugin<Project> {
+                 }
+                 project.tasks["process${cName}Resources"].dependsOn(preprocessResources)
+                 resources.setSrcDirs(listOf(overwriteResources, preprocessResources.map { generatedResources }))
+-            }
++            } catch (_: Throwable) {}}
+ 
+             project.afterEvaluate {
+                 val prepareTaskName = "prepareMappingsForPreprocessor"

@@ -5,7 +5,7 @@ Subject: [PATCH] Add version to manifest
 
 
 diff --git a/build.gradle.kts b/build.gradle.kts
-index 426712c3693a7e603227782a8803f175c07cc8c6..2ce2b8f4ef56c7eb411409b6dc2c5a9f79f09d84 100644
+index ab4a8cd89935b5788fd6ae08b7ff96d60d7dd2e9..46f9ba1cf205dccf839654f6401283160ce74165 100644
 --- a/build.gradle.kts
 +++ b/build.gradle.kts
 @@ -41,6 +41,11 @@ gradlePlugin {

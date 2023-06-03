@@ -5,10 +5,10 @@ Subject: [PATCH] Underscores are now ignored when parsing
 
 
 diff --git a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessTask.kt b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessTask.kt
-index eddd4a6604b91ecbba72da0e2f627a3fe09d4117..2f403e11293a16ddedda05115141fab2b72d633e 100644
+index 1aca8dc36494d8c9562b3a990ae016c97b635bfc..99d9e507873a0779968483ee44b938ae5d65a664 100644
 --- a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessTask.kt
 +++ b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessTask.kt
-@@ -312,8 +312,13 @@ class CommentPreprocessor(private val vars: Map<String, Int>) {
+@@ -322,8 +322,13 @@ class CommentPreprocessor(private val vars: Map<String, Int>) {
  
      var fail = false
  

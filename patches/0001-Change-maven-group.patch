@@ -5,7 +5,7 @@ Subject: [PATCH] Change maven group
 
 
 diff --git a/build.gradle.kts b/build.gradle.kts
-index 26a5b10dfc184a47f2065b3649b10b210626d16c..e32e8cc37c5e9d20293d33605654ec8179e1c66c 100644
+index d88a248d807155ef1b921a11baa3d5a37def8c98..ba718a6969f8767e9221e49e8a326ab55e160ec6 100644
 --- a/build.gradle.kts
 +++ b/build.gradle.kts
 @@ -20,7 +20,7 @@ plugins {

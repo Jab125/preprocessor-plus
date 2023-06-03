@@ -1,0 +1,135 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jab125 <67534807+Jab125@users.noreply.github.com>
+Date: Sat, 3 Jun 2023 18:47:04 +1000
+Subject: [PATCH] Add the ability to specify parsers for variables (will only
+ work when the opposite side is a variable)
+
+
+diff --git a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessExtension.kt b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessExtension.kt
+index fca1424fe6675f0c34a5b2a1c2d250dd582f9363..64745cfd7fff837fff5d9de54efccbc83357905a 100644
+--- a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessExtension.kt
++++ b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessExtension.kt
+@@ -1,5 +1,6 @@
+ package com.replaymod.gradle.preprocess
+ 
++import javaslang.Function1
+ import org.gradle.api.model.ObjectFactory
+ import org.gradle.kotlin.dsl.mapProperty
+ import org.gradle.kotlin.dsl.property
+@@ -8,6 +9,17 @@ open class PreprocessExtension(objects: ObjectFactory, val mcVersion: Int) {
+     val vars = objects.mapProperty<String, Int>().convention(mutableMapOf(
+             "MC" to mcVersion
+     ))
++    val parsers = objects.mapProperty<String, Function1<String, Int>>().convention(mutableMapOf(
++        "MC" to Function1<String, Int> { string ->
++            if (string == null) return@Function1 0
++            val splat : List<String> = string.split(".")
++            val versionStr : StringBuilder = StringBuilder()
++            splat.forEach {
++                versionStr.append(it.padStart(2, '0'))
++            }
++            versionStr.toString().toInt()
++        }
++    ))
+     val keywords = objects.mapProperty<String, Keywords>().convention(mutableMapOf(
+             ".java" to PreprocessTask.DEFAULT_KEYWORDS,
+             ".kt" to PreprocessTask.DEFAULT_KEYWORDS,
+diff --git a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessPlugin.kt b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessPlugin.kt
+index ced78db581d330a8458d0aca74e7a2149775e189..979a7eac01885c46ebb4eeed83485b5e148fe85f 100644
+--- a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessPlugin.kt
++++ b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessPlugin.kt
+@@ -100,6 +100,7 @@ class PreprocessPlugin : Plugin<Project> {
+                     mapping = mappingFile
+                     reverseMapping = reverseMappings
+                     vars.convention(ext.vars)
++                    parsers.convention(ext.parsers)
+                     keywords.convention(ext.keywords)
+                     patternAnnotation.convention(ext.patternAnnotation)
+                     manageImports.convention(ext.manageImports)
+diff --git a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessTask.kt b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessTask.kt
+index 99d9e507873a0779968483ee44b938ae5d65a664..67a22977ff2e5396f91f94b86b8b79a731d79c59 100644
+--- a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessTask.kt
++++ b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessTask.kt
+@@ -3,6 +3,7 @@ package com.replaymod.gradle.preprocess
+ import com.replaymod.gradle.remap.Transformer
+ import com.replaymod.gradle.remap.legacy.LegacyMapping
+ import com.replaymod.gradle.remap.legacy.LegacyMappingSetModelFactory
++import javaslang.Function1
+ import org.cadixdev.lorenz.MappingSet
+ import org.cadixdev.lorenz.io.MappingFormats
+ import org.gradle.api.DefaultTask
+@@ -147,6 +148,9 @@ open class PreprocessTask : DefaultTask() {
+     @Input
+     val vars = project.objects.mapProperty<String, Int>()
+ 
++    @Input
++    val parsers = project.objects.mapProperty<String, Function1<String, Int>>()
++
+     @Input
+     val keywords = project.objects.mapProperty<String, Keywords>()
+ 
+@@ -257,7 +261,7 @@ open class PreprocessTask : DefaultTask() {
+                     val lines = text.lines()
+                     val kws = keywords.get().entries.find { (ext, _) -> relPath.endsWith(ext) }
+                     if (kws != null) {
+-                        processedSources[relPath] = CommentPreprocessor(vars.get()).convertSource(
++                        processedSources[relPath] = CommentPreprocessor(vars.get(), parsers.get()).convertSource(
+                                 kws.value,
+                                 lines,
+                                 lines.map { Pair(it, emptyList()) },
+@@ -280,7 +284,7 @@ open class PreprocessTask : DefaultTask() {
+ 
+         project.delete(entries.map { it.generated })
+ 
+-        val commentPreprocessor = CommentPreprocessor(vars.get())
++        val commentPreprocessor = CommentPreprocessor(vars.get(), parsers.get())
+         sourceFiles.forEach { (relPath, inBase, outBase, overwritesPath) ->
+             val file = inBase.resolve(relPath).toFile()
+             val outFile = outBase.resolve(relPath).toFile()
+@@ -313,7 +317,7 @@ open class PreprocessTask : DefaultTask() {
+     }
+ }
+ 
+-class CommentPreprocessor(private val vars: Map<String, Int>) {
++class CommentPreprocessor(private val vars: Map<String, Int>, private val parsers: Map<String, Function1<String, Int>>) {
+     companion object {
+         private val EXPR_PATTERN = Pattern.compile("(.+)(==|!=|<=|>=|<|>)(.+)")
+         private val OR_PATTERN = Pattern.quote("||").toPattern()
+@@ -322,11 +326,11 @@ class CommentPreprocessor(private val vars: Map<String, Int>) {
+ 
+     var fail = false
+ 
+-    private fun String.evalVarOrNull() = cleanUp().toIntOrNull() ?: vars[this]
+-    private fun String.evalVar() = cleanUp().evalVarOrNull() ?: throw NoSuchElementException(this)
++    private fun String.evalVarOrNull() : Int? = cleanUp().toIntOrNull() ?: vars[this]
++    private fun String.evalVar() : Int = evalVarOrNull() ?: throw NoSuchElementException(this)
+ 
+     private fun String.cleanUp() : String {
+-        if (this.startsWith('_')) return this
++        if (this.startsWith('_') || this.endsWith('_')) return this
+         return this.replace("_", "", false)
+     }
+ 
+@@ -349,8 +353,20 @@ class CommentPreprocessor(private val vars: Map<String, Int>) {
+ 
+         val matcher = EXPR_PATTERN.matcher(this)
+         if (matcher.matches()) {
+-            val lhs = matcher.group(1).trim().evalVar()
+-            val rhs = matcher.group(3).trim().evalVar()
++            val lhsToken = matcher.group(1).trim()
++            val rhsToken = matcher.group(3).trim()
++            // if we got a value with a parser, parse the other side (if it's not a variable) via the parser
++            val rhs : Int = if (vars.containsKey(lhsToken) && parsers.containsKey(lhsToken) && !vars.containsKey(rhsToken)) {
++                parsers[lhsToken]!!.apply(rhsToken);
++            } else {
++                rhsToken.evalVar()
++            }
++            val lhs : Int = if (vars.containsKey(rhsToken) && parsers.containsKey(rhsToken) && !vars.containsKey(lhsToken)) {
++                parsers[rhsToken]!!.apply(lhsToken);
++            } else {
++                lhsToken.evalVar()
++            }
++
+             return when (matcher.group(2)) {
+                 "==" -> lhs == rhs
+                 "!=" -> lhs != rhs

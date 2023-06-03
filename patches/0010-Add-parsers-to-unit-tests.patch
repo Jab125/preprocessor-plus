@@ -1,0 +1,82 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jab125 <67534807+Jab125@users.noreply.github.com>
+Date: Sat, 3 Jun 2023 18:47:19 +1000
+Subject: [PATCH] Add parsers to unit tests
+
+
+diff --git a/src/test/kotlin/com/replaymod/gradle/preprocess/PreprocessorTests.kt b/src/test/kotlin/com/replaymod/gradle/preprocess/PreprocessorTests.kt
+index 1b3d34bcfb91860675580b92024e1468daa8fbe3..d3a52b82b37b5d8c7bb52a76757cad08dd360109 100644
+--- a/src/test/kotlin/com/replaymod/gradle/preprocess/PreprocessorTests.kt
++++ b/src/test/kotlin/com/replaymod/gradle/preprocess/PreprocessorTests.kt
+@@ -5,6 +5,7 @@ import io.kotest.core.spec.style.FunSpec
+ import io.kotest.matchers.booleans.shouldBeFalse
+ import io.kotest.matchers.booleans.shouldBeTrue
+ import io.kotest.matchers.shouldBe
++import javaslang.Function1
+ 
+ class PreprocessorTests : FunSpec({
+     val vars = mapOf(
+@@ -12,9 +13,23 @@ class PreprocessorTests : FunSpec({
+             "one" to 1,
+             "two" to 2,
+             "t" to 1,
+-            "f" to 0
++            "f" to 0,
++            "version" to 11902,
++            "version11903" to 11903
+     )
+-    with(CommentPreprocessor(vars)) {
++    val parsers = mapOf(
++        "version" to Function1<String, Int> { string ->
++            if (string == null) return@Function1 0
++            val splat : List<String> = string.split(".")
++            val versionStr : StringBuilder = StringBuilder()
++            splat.forEach {
++                versionStr.append(it.padStart(2, '0'))
++            }
++            versionStr.toString().toInt()
++        }
++    )
++
++    with(CommentPreprocessor(vars, parsers)) {
+         context("evalExpr") {
+             test("c-style truthiness of variables") {
+                 "zero".evalExpr().shouldBeFalse()
+@@ -94,9 +109,17 @@ class PreprocessorTests : FunSpec({
+                 "15_000_000 == 15_00_00_00".evalExpr().shouldBeTrue()
+                 shouldThrow<NoSuchElementException> {  "15@000@000 == 15@000@000".evalExpr() }
+             }
+-
+-            test("underscore being at the beginning should not be removed") {
++            test("underscore being at the beginning or end should not be removed") {
+                 shouldThrow<NoSuchElementException> { "_15_000_000 == 15_000_000".evalExpr() }
++                shouldThrow<NoSuchElementException> { "15_000_000_ == 15_000_000".evalExpr() }
++            }
++            test("custom parsers") {
++                "version == 1.19.2".evalExpr().shouldBeTrue()
++                "1.19.2 == version".evalExpr().shouldBeTrue()
++                "1.19.3 == version".evalExpr().shouldBeFalse()
++                "1.19.3 >= version".evalExpr().shouldBeTrue()
++                "version11903 >= version".evalExpr().shouldBeTrue()
++                shouldThrow<NoSuchElementException> { "version11903 == 1.19.3".evalExpr() }
+             }
+         }
+         context("convertSource") {
+@@ -613,7 +636,7 @@ class PreprocessorTests : FunSpec({
+                 ).shouldBe(listOf("//#if f", "//$$ original", "//#endif"))
+             }
+             test("fails when there are errors in unaffected lines") {
+-                with (CommentPreprocessor(vars)) {
++                with (CommentPreprocessor(vars, parsers)) {
+                     convertSource(
+                             PreprocessTask.DEFAULT_KEYWORDS,
+                             listOf("//#if t", "original", "//#endif"),
+@@ -628,7 +651,7 @@ class PreprocessorTests : FunSpec({
+                 }
+             }
+             test("ignores errors in commented lines") {
+-                with (CommentPreprocessor(vars)) {
++                with (CommentPreprocessor(vars, parsers)) {
+                     convertSource(
+                             PreprocessTask.DEFAULT_KEYWORDS,
+                             listOf("//#if f", "original", "//#endif"),

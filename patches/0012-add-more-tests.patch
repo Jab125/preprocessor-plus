@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jab125 <67534807+Jab125@users.noreply.github.com>
+Date: Sat, 3 Jun 2023 21:04:20 +1000
+Subject: [PATCH] add more tests
+
+
+diff --git a/src/test/kotlin/com/replaymod/gradle/preprocess/PreprocessorTests.kt b/src/test/kotlin/com/replaymod/gradle/preprocess/PreprocessorTests.kt
+index d3a52b82b37b5d8c7bb52a76757cad08dd360109..51fa37f806c153194f0717ff4feb5099b0773d15 100644
+--- a/src/test/kotlin/com/replaymod/gradle/preprocess/PreprocessorTests.kt
++++ b/src/test/kotlin/com/replaymod/gradle/preprocess/PreprocessorTests.kt
+@@ -120,6 +120,8 @@ class PreprocessorTests : FunSpec({
+                 "1.19.3 >= version".evalExpr().shouldBeTrue()
+                 "version11903 >= version".evalExpr().shouldBeTrue()
+                 shouldThrow<NoSuchElementException> { "version11903 == 1.19.3".evalExpr() }
++                "version == 11902".evalExpr().shouldBeTrue();
++                shouldThrow<NumberFormatException> { "version == 1_19_03".evalExpr() }
+             }
+         }
+         context("convertSource") {

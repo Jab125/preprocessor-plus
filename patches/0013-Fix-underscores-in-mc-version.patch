@@ -1,0 +1,108 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jab125 <67534807+Jab125@users.noreply.github.com>
+Date: Sun, 4 Jun 2023 00:27:53 +1000
+Subject: [PATCH] Fix underscores in mc version
+
+
+diff --git a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessExtension.kt b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessExtension.kt
+index 64745cfd7fff837fff5d9de54efccbc83357905a..c7243089748887cb60e85f06ac9d46e5c2dd6981 100644
+--- a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessExtension.kt
++++ b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessExtension.kt
+@@ -9,9 +9,10 @@ open class PreprocessExtension(objects: ObjectFactory, val mcVersion: Int) {
+     val vars = objects.mapProperty<String, Int>().convention(mutableMapOf(
+             "MC" to mcVersion
+     ))
+-    val parsers = objects.mapProperty<String, Function1<String, Int>>().convention(mutableMapOf(
+-        "MC" to Function1<String, Int> { string ->
+-            if (string == null) return@Function1 0
++    val parsers = objects.mapProperty<String, Function1<String, Int?>>().convention(mutableMapOf(
++        "MC" to Function1<String, Int?> { string ->
++            if (string == null) return@Function1 null
++            if (string.cleanUp().toIntOrNull() != null) return@Function1 null
+             val splat : List<String> = string.split(".")
+             val versionStr : StringBuilder = StringBuilder()
+             splat.forEach {
+@@ -30,4 +31,11 @@ open class PreprocessExtension(objects: ObjectFactory, val mcVersion: Int) {
+     ))
+     val patternAnnotation = objects.property<String>()
+     val manageImports = objects.property<Boolean>()
++
++    companion object {
++        internal fun String.cleanUp() : String {
++            if (this.startsWith('_') || this.endsWith('_')) return this
++            return this.replace("_", "", false)
++        }
++    }
+ }
+\ No newline at end of file
+diff --git a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessTask.kt b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessTask.kt
+index 67a22977ff2e5396f91f94b86b8b79a731d79c59..3fb9eded14d7ef26fb05a9a66f93390ff7372e8d 100644
+--- a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessTask.kt
++++ b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessTask.kt
+@@ -149,7 +149,7 @@ open class PreprocessTask : DefaultTask() {
+     val vars = project.objects.mapProperty<String, Int>()
+ 
+     @Input
+-    val parsers = project.objects.mapProperty<String, Function1<String, Int>>()
++    val parsers = project.objects.mapProperty<String, Function1<String, Int?>>()
+ 
+     @Input
+     val keywords = project.objects.mapProperty<String, Keywords>()
+@@ -317,7 +317,7 @@ open class PreprocessTask : DefaultTask() {
+     }
+ }
+ 
+-class CommentPreprocessor(private val vars: Map<String, Int>, private val parsers: Map<String, Function1<String, Int>>) {
++class CommentPreprocessor(private val vars: Map<String, Int>, private val parsers: Map<String, Function1<String, Int?>>) {
+     companion object {
+         private val EXPR_PATTERN = Pattern.compile("(.+)(==|!=|<=|>=|<|>)(.+)")
+         private val OR_PATTERN = Pattern.quote("||").toPattern()
+@@ -357,12 +357,12 @@ class CommentPreprocessor(private val vars: Map<String, Int>, private val parser
+             val rhsToken = matcher.group(3).trim()
+             // if we got a value with a parser, parse the other side (if it's not a variable) via the parser
+             val rhs : Int = if (vars.containsKey(lhsToken) && parsers.containsKey(lhsToken) && !vars.containsKey(rhsToken)) {
+-                parsers[lhsToken]!!.apply(rhsToken);
++                parsers[lhsToken]!!.apply(rhsToken) ?: rhsToken.evalVar()
+             } else {
+                 rhsToken.evalVar()
+             }
+             val lhs : Int = if (vars.containsKey(rhsToken) && parsers.containsKey(rhsToken) && !vars.containsKey(lhsToken)) {
+-                parsers[rhsToken]!!.apply(lhsToken);
++                parsers[rhsToken]!!.apply(lhsToken) ?: lhsToken.evalVar()
+             } else {
+                 lhsToken.evalVar()
+             }
+diff --git a/src/test/kotlin/com/replaymod/gradle/preprocess/PreprocessorTests.kt b/src/test/kotlin/com/replaymod/gradle/preprocess/PreprocessorTests.kt
+index 51fa37f806c153194f0717ff4feb5099b0773d15..989c5516cc06ce142fff44a2be72eee1d635bca7 100644
+--- a/src/test/kotlin/com/replaymod/gradle/preprocess/PreprocessorTests.kt
++++ b/src/test/kotlin/com/replaymod/gradle/preprocess/PreprocessorTests.kt
+@@ -1,5 +1,6 @@
+ package com.replaymod.gradle.preprocess
+ 
++import com.replaymod.gradle.preprocess.PreprocessExtension.Companion.cleanUp
+ import io.kotest.assertions.throwables.shouldThrow
+ import io.kotest.core.spec.style.FunSpec
+ import io.kotest.matchers.booleans.shouldBeFalse
+@@ -18,8 +19,9 @@ class PreprocessorTests : FunSpec({
+             "version11903" to 11903
+     )
+     val parsers = mapOf(
+-        "version" to Function1<String, Int> { string ->
+-            if (string == null) return@Function1 0
++        "version" to Function1<String, Int?> { string ->
++            if (string == null) return@Function1 null
++            if (string.cleanUp().toIntOrNull() != null) return@Function1 null
+             val splat : List<String> = string.split(".")
+             val versionStr : StringBuilder = StringBuilder()
+             splat.forEach {
+@@ -120,8 +122,8 @@ class PreprocessorTests : FunSpec({
+                 "1.19.3 >= version".evalExpr().shouldBeTrue()
+                 "version11903 >= version".evalExpr().shouldBeTrue()
+                 shouldThrow<NoSuchElementException> { "version11903 == 1.19.3".evalExpr() }
+-                "version == 11902".evalExpr().shouldBeTrue();
+-                shouldThrow<NumberFormatException> { "version == 1_19_03".evalExpr() }
++                "version == 11902".evalExpr().shouldBeTrue()
++                "version == 1_19_02".evalExpr().shouldBeTrue()
+             }
+         }
+         context("convertSource") {

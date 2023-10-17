@@ -1,0 +1,19 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jab125 <67534807+Jab125@users.noreply.github.com>
+Date: Tue, 17 Oct 2023 21:58:54 +1100
+Subject: [PATCH] bump to 0.2.2
+
+
+diff --git a/build.gradle.kts b/build.gradle.kts
+index aee382a2543f70323179894e336f2c6e8d03e38b..d41615f2a021d37ae42afd7472ba3d9cd7c97fee 100644
+--- a/build.gradle.kts
++++ b/build.gradle.kts
+@@ -21,7 +21,7 @@ plugins {
+ }
+ 
+ group = "com.jab125.preprocessor" // this is a fork
+-version = "0.2.1"
++version = "0.2.2"
+ 
+ val kotestVersion: String by project.extra
+ 

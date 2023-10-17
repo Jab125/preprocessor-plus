@@ -5,7 +5,7 @@ Subject: [PATCH] Fix manifest
 
 
 diff --git a/build.gradle.kts b/build.gradle.kts
-index 46f9ba1cf205dccf839654f6401283160ce74165..d672d5729a814847d2b573e2a41b3733c4bd88bd 100644
+index e125121d13c7fc2a6671ee8558f5261f604aeba6..91c6facf818e80b3fad2b9082688ae53038f4ada 100644
 --- a/build.gradle.kts
 +++ b/build.gradle.kts
 @@ -21,7 +21,7 @@ plugins {
@@ -17,19 +17,7 @@ index 46f9ba1cf205dccf839654f6401283160ce74165..d672d5729a814847d2b573e2a41b3733
  
  val kotestVersion: String by project.extra
  
-@@ -41,11 +41,6 @@ gradlePlugin {
- java {
-     sourceCompatibility = JavaVersion.VERSION_1_8
-     targetCompatibility = JavaVersion.VERSION_1_8
--
--    manifest {
--        attributes["Implementation-Version"] = project.version
--    }
--
- }
- 
- tasks.withType<Test> {
-@@ -67,3 +62,9 @@ dependencies {
+@@ -59,3 +59,9 @@ dependencies {
      testImplementation("io.kotest:kotest-runner-junit5-jvm:$kotestVersion")
      testImplementation("io.kotest:kotest-assertions-core-jvm:$kotestVersion")
  }

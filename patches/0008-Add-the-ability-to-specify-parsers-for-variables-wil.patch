@@ -35,10 +35,10 @@ index fca1424fe6675f0c34a5b2a1c2d250dd582f9363..64745cfd7fff837fff5d9de54efccbc8
              ".java" to PreprocessTask.DEFAULT_KEYWORDS,
              ".kt" to PreprocessTask.DEFAULT_KEYWORDS,
 diff --git a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessPlugin.kt b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessPlugin.kt
-index ced78db581d330a8458d0aca74e7a2149775e189..979a7eac01885c46ebb4eeed83485b5e148fe85f 100644
+index 4cd124b919a95f0bed82604b84b0281b0c2f8c81..e10151c302fabb1d1a089bed7795b073b2ac7a04 100644
 --- a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessPlugin.kt
 +++ b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessPlugin.kt
-@@ -100,6 +100,7 @@ class PreprocessPlugin : Plugin<Project> {
+@@ -101,6 +101,7 @@ class PreprocessPlugin : Plugin<Project> {
                      mapping = mappingFile
                      reverseMapping = reverseMappings
                      vars.convention(ext.vars)
@@ -47,7 +47,7 @@ index ced78db581d330a8458d0aca74e7a2149775e189..979a7eac01885c46ebb4eeed83485b5e
                      patternAnnotation.convention(ext.patternAnnotation)
                      manageImports.convention(ext.manageImports)
 diff --git a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessTask.kt b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessTask.kt
-index 99d9e507873a0779968483ee44b938ae5d65a664..67a22977ff2e5396f91f94b86b8b79a731d79c59 100644
+index c893d5c6964b584773cde43112875df5db0d84a1..6c572a35745349f7fbb47580cfa94a5110a93011 100644
 --- a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessTask.kt
 +++ b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessTask.kt
 @@ -3,6 +3,7 @@ package com.replaymod.gradle.preprocess
@@ -58,7 +58,7 @@ index 99d9e507873a0779968483ee44b938ae5d65a664..67a22977ff2e5396f91f94b86b8b79a7
  import org.cadixdev.lorenz.MappingSet
  import org.cadixdev.lorenz.io.MappingFormats
  import org.gradle.api.DefaultTask
-@@ -147,6 +148,9 @@ open class PreprocessTask : DefaultTask() {
+@@ -157,6 +158,9 @@ open class PreprocessTask : DefaultTask() {
      @Input
      val vars = project.objects.mapProperty<String, Int>()
  
@@ -68,7 +68,7 @@ index 99d9e507873a0779968483ee44b938ae5d65a664..67a22977ff2e5396f91f94b86b8b79a7
      @Input
      val keywords = project.objects.mapProperty<String, Keywords>()
  
-@@ -257,7 +261,7 @@ open class PreprocessTask : DefaultTask() {
+@@ -267,7 +271,7 @@ open class PreprocessTask : DefaultTask() {
                      val lines = text.lines()
                      val kws = keywords.get().entries.find { (ext, _) -> relPath.endsWith(ext) }
                      if (kws != null) {
@@ -77,7 +77,7 @@ index 99d9e507873a0779968483ee44b938ae5d65a664..67a22977ff2e5396f91f94b86b8b79a7
                                  kws.value,
                                  lines,
                                  lines.map { Pair(it, emptyList()) },
-@@ -280,7 +284,7 @@ open class PreprocessTask : DefaultTask() {
+@@ -290,7 +294,7 @@ open class PreprocessTask : DefaultTask() {
  
          project.delete(entries.map { it.generated })
  
@@ -86,7 +86,7 @@ index 99d9e507873a0779968483ee44b938ae5d65a664..67a22977ff2e5396f91f94b86b8b79a7
          sourceFiles.forEach { (relPath, inBase, outBase, overwritesPath) ->
              val file = inBase.resolve(relPath).toFile()
              val outFile = outBase.resolve(relPath).toFile()
-@@ -313,7 +317,7 @@ open class PreprocessTask : DefaultTask() {
+@@ -323,7 +327,7 @@ open class PreprocessTask : DefaultTask() {
      }
  }
  
@@ -95,7 +95,7 @@ index 99d9e507873a0779968483ee44b938ae5d65a664..67a22977ff2e5396f91f94b86b8b79a7
      companion object {
          private val EXPR_PATTERN = Pattern.compile("(.+)(==|!=|<=|>=|<|>)(.+)")
          private val OR_PATTERN = Pattern.quote("||").toPattern()
-@@ -322,11 +326,11 @@ class CommentPreprocessor(private val vars: Map<String, Int>) {
+@@ -332,11 +336,11 @@ class CommentPreprocessor(private val vars: Map<String, Int>) {
  
      var fail = false
  
@@ -110,7 +110,7 @@ index 99d9e507873a0779968483ee44b938ae5d65a664..67a22977ff2e5396f91f94b86b8b79a7
          return this.replace("_", "", false)
      }
  
-@@ -349,8 +353,20 @@ class CommentPreprocessor(private val vars: Map<String, Int>) {
+@@ -359,8 +363,20 @@ class CommentPreprocessor(private val vars: Map<String, Int>) {
  
          val matcher = EXPR_PATTERN.matcher(this)
          if (matcher.matches()) {

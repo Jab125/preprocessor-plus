@@ -5,10 +5,10 @@ Subject: [PATCH] Output preprocess version
 
 
 diff --git a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessPlugin.kt b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessPlugin.kt
-index faa733f3becca09c8b2bd60702e38122bbe83bd0..46571470945e41c64994033c236e900f8ef3146f 100644
+index a53c4dea53df01190cabc07aa46cec72c44db30a..4b9d3ece7e51670f8c44cd0312bc467e9d2bf568 100644
 --- a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessPlugin.kt
 +++ b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessPlugin.kt
-@@ -23,7 +23,12 @@ import java.nio.file.Path
+@@ -24,7 +24,12 @@ import java.nio.file.Path
  import java.util.stream.Collectors
  
  class PreprocessPlugin : Plugin<Project> {

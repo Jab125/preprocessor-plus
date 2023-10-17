@@ -5,7 +5,7 @@ Subject: [PATCH] Fix more maven groups
 
 
 diff --git a/build.gradle.kts b/build.gradle.kts
-index ba718a6969f8767e9221e49e8a326ab55e160ec6..ab4a8cd89935b5788fd6ae08b7ff96d60d7dd2e9 100644
+index 89d5f313bcb44a1af14d50c73181a6316396ffc3..e125121d13c7fc2a6671ee8558f5261f604aeba6 100644
 --- a/build.gradle.kts
 +++ b/build.gradle.kts
 @@ -28,11 +28,11 @@ val kotestVersion: String by project.extra

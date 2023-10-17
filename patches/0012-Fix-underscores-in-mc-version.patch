@@ -36,10 +36,10 @@ index 64745cfd7fff837fff5d9de54efccbc83357905a..c7243089748887cb60e85f06ac9d46e5
  }
 \ No newline at end of file
 diff --git a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessTask.kt b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessTask.kt
-index 67a22977ff2e5396f91f94b86b8b79a731d79c59..3fb9eded14d7ef26fb05a9a66f93390ff7372e8d 100644
+index 6c572a35745349f7fbb47580cfa94a5110a93011..b8a2e86a0e63eb40eeadb3efd67e0a303211e7f9 100644
 --- a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessTask.kt
 +++ b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessTask.kt
-@@ -149,7 +149,7 @@ open class PreprocessTask : DefaultTask() {
+@@ -159,7 +159,7 @@ open class PreprocessTask : DefaultTask() {
      val vars = project.objects.mapProperty<String, Int>()
  
      @Input
@@ -48,7 +48,7 @@ index 67a22977ff2e5396f91f94b86b8b79a731d79c59..3fb9eded14d7ef26fb05a9a66f93390f
  
      @Input
      val keywords = project.objects.mapProperty<String, Keywords>()
-@@ -317,7 +317,7 @@ open class PreprocessTask : DefaultTask() {
+@@ -327,7 +327,7 @@ open class PreprocessTask : DefaultTask() {
      }
  }
  
@@ -57,7 +57,7 @@ index 67a22977ff2e5396f91f94b86b8b79a731d79c59..3fb9eded14d7ef26fb05a9a66f93390f
      companion object {
          private val EXPR_PATTERN = Pattern.compile("(.+)(==|!=|<=|>=|<|>)(.+)")
          private val OR_PATTERN = Pattern.quote("||").toPattern()
-@@ -357,12 +357,12 @@ class CommentPreprocessor(private val vars: Map<String, Int>, private val parser
+@@ -367,12 +367,12 @@ class CommentPreprocessor(private val vars: Map<String, Int>, private val parser
              val rhsToken = matcher.group(3).trim()
              // if we got a value with a parser, parse the other side (if it's not a variable) via the parser
              val rhs : Int = if (vars.containsKey(lhsToken) && parsers.containsKey(lhsToken) && !vars.containsKey(rhsToken)) {

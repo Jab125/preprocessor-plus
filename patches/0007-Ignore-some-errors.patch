@@ -6,7 +6,7 @@ Subject: [PATCH] Ignore some errors
 WILL BE REVERTED LATER
 
 diff --git a/build.gradle.kts b/build.gradle.kts
-index 4bfec63c123cc0d623862e85341794d01c7a23ca..8d4705d254bdb0fe977bc32a474e457362fc3724 100644
+index d35b6cb55eb2af8129203dae4ea1de51e5925b44..83ac6c913f21cf96d6b46dcbfd291363b2671f19 100644
 --- a/build.gradle.kts
 +++ b/build.gradle.kts
 @@ -21,7 +21,7 @@ plugins {
@@ -19,10 +19,10 @@ index 4bfec63c123cc0d623862e85341794d01c7a23ca..8d4705d254bdb0fe977bc32a474e4573
  val kotestVersion: String by project.extra
  
 diff --git a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessPlugin.kt b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessPlugin.kt
-index 46571470945e41c64994033c236e900f8ef3146f..ced78db581d330a8458d0aca74e7a2149775e189 100644
+index 4b9d3ece7e51670f8c44cd0312bc467e9d2bf568..4cd124b919a95f0bed82604b84b0281b0c2f8c81 100644
 --- a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessPlugin.kt
 +++ b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessPlugin.kt
-@@ -66,7 +66,7 @@ class PreprocessPlugin : Plugin<Project> {
+@@ -67,7 +67,7 @@ class PreprocessPlugin : Plugin<Project> {
              val reverseMappings = (inheritedLink != null) != mappingFileInverted
              val inherited = parent.evaluationDependsOn(inheritedNode.project)
  
@@ -31,7 +31,7 @@ index 46571470945e41c64994033c236e900f8ef3146f..ced78db581d330a8458d0aca74e7a214
                  val inheritedSourceSet = inherited.the<SourceSetContainer>()[name]
                  val cName = if (name == "main") "" else name.capitalize()
                  val overwritesKotlin = project.file("src/$name/kotlin").also { it.mkdirs() }
-@@ -135,7 +135,7 @@ class PreprocessPlugin : Plugin<Project> {
+@@ -136,7 +136,7 @@ class PreprocessPlugin : Plugin<Project> {
                  }
                  project.tasks["process${cName}Resources"].dependsOn(preprocessResources)
                  resources.setSrcDirs(listOf(overwriteResources, preprocessResources.map { generatedResources }))

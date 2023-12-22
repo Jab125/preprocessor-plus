@@ -1,0 +1,149 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jab125 <67534807+Jab125@users.noreply.github.com>
+Date: Fri, 22 Dec 2023 21:05:12 +1100
+Subject: [PATCH] add ability to change indentation character
+
+also fixes issue with parsers not applying to resources
+
+diff --git a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessExtension.kt b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessExtension.kt
+index c7243089748887cb60e85f06ac9d46e5c2dd6981..6d902085604ce41efdd1190c5013fd8689505ab0 100644
+--- a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessExtension.kt
++++ b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessExtension.kt
+@@ -29,6 +29,7 @@ open class PreprocessExtension(objects: ObjectFactory, val mcVersion: Int) {
+             ".mcmeta" to PreprocessTask.DEFAULT_KEYWORDS,
+             ".cfg" to PreprocessTask.CFG_KEYWORDS
+     ))
++    val indentationCharacter = objects.property<Char>()
+     val patternAnnotation = objects.property<String>()
+     val manageImports = objects.property<Boolean>()
+ 
+diff --git a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessPlugin.kt b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessPlugin.kt
+index e10151c302fabb1d1a089bed7795b073b2ac7a04..d96e21013eb3041bc5a2f90ba99832f575d4e5ca 100644
+--- a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessPlugin.kt
++++ b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessPlugin.kt
+@@ -103,6 +103,7 @@ class PreprocessPlugin : Plugin<Project> {
+                     vars.convention(ext.vars)
+                     parsers.convention(ext.parsers)
+                     keywords.convention(ext.keywords)
++                    indentationCharacter.convention(ext.indentationCharacter)
+                     patternAnnotation.convention(ext.patternAnnotation)
+                     manageImports.convention(ext.manageImports)
+                 }
+@@ -131,7 +132,9 @@ class PreprocessPlugin : Plugin<Project> {
+                         generated = generatedResources,
+                     )
+                     vars.convention(ext.vars)
++                    parsers.convention(ext.parsers)
+                     keywords.convention(ext.keywords)
++                    indentationCharacter.convention(ext.indentationCharacter)
+                     patternAnnotation.convention(ext.patternAnnotation)
+                     manageImports.convention(ext.manageImports)
+                 }
+diff --git a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessTask.kt b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessTask.kt
+index b8a2e86a0e63eb40eeadb3efd67e0a303211e7f9..d31c0a0641e2e0afd67308be7af086a4c2e7695a 100644
+--- a/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessTask.kt
++++ b/src/main/kotlin/com/replaymod/gradle/preprocess/PreprocessTask.kt
+@@ -164,6 +164,9 @@ open class PreprocessTask : DefaultTask() {
+     @Input
+     val keywords = project.objects.mapProperty<String, Keywords>()
+ 
++    @Input
++    val indentationCharacter = project.objects.property<Char>()
++
+     @Input
+     @Optional
+     val patternAnnotation = project.objects.property<String>()
+@@ -271,7 +274,7 @@ open class PreprocessTask : DefaultTask() {
+                     val lines = text.lines()
+                     val kws = keywords.get().entries.find { (ext, _) -> relPath.endsWith(ext) }
+                     if (kws != null) {
+-                        processedSources[relPath] = CommentPreprocessor(vars.get(), parsers.get()).convertSource(
++                        processedSources[relPath] = CommentPreprocessor(indentationCharacter.get(), vars.get(), parsers.get()).convertSource(
+                                 kws.value,
+                                 lines,
+                                 lines.map { Pair(it, emptyList()) },
+@@ -294,7 +297,7 @@ open class PreprocessTask : DefaultTask() {
+ 
+         project.delete(entries.map { it.generated })
+ 
+-        val commentPreprocessor = CommentPreprocessor(vars.get(), parsers.get())
++        val commentPreprocessor = CommentPreprocessor(indentationCharacter.get(), vars.get(), parsers.get())
+         sourceFiles.forEach { (relPath, inBase, outBase, overwritesPath) ->
+             val file = inBase.resolve(relPath).toFile()
+             val outFile = outBase.resolve(relPath).toFile()
+@@ -327,7 +330,7 @@ open class PreprocessTask : DefaultTask() {
+     }
+ }
+ 
+-class CommentPreprocessor(private val vars: Map<String, Int>, private val parsers: Map<String, Function1<String, Int?>>) {
++class CommentPreprocessor(private val indentationCharacter: Char, private val vars: Map<String, Int>, private val parsers: Map<String, Function1<String, Int?>>) {
+     companion object {
+         private val EXPR_PATTERN = Pattern.compile("(.+)(==|!=|<=|>=|<|>)(.+)")
+         private val OR_PATTERN = Pattern.quote("||").toPattern()
+@@ -392,7 +395,7 @@ class CommentPreprocessor(private val vars: Map<String, Int>, private val parser
+     }
+ 
+     private val String.indentation: Int
+-        get() = takeWhile { it == ' ' }.length
++        get() = takeWhile { it == indentationCharacter }.length
+ 
+     fun convertSource(kws: Keywords, lines: List<String>, remapped: List<Pair<String, List<String>>>, fileName: String): List<String> {
+         val stack = mutableListOf<IfStackEntry>()
+@@ -507,7 +510,7 @@ class CommentPreprocessor(private val vars: Map<String, Int>, private val parser
+                         // remap process is only guaranteed to work on code which compiles and since we're
+                         // just about to comment it out, it probably doesn't compile.
+                         ignoreErrors = true
+-                        " ".repeat(currIndent) + kws.eval + " " + originalLine.substring(currIndent)
++                        indentationCharacter.toString().repeat(currIndent) + kws.eval + " " + originalLine.substring(currIndent) // FIXME
+                     } else {
+                         line
+                     }
+diff --git a/src/test/kotlin/com/replaymod/gradle/preprocess/PreprocessorTests.kt b/src/test/kotlin/com/replaymod/gradle/preprocess/PreprocessorTests.kt
+index 989c5516cc06ce142fff44a2be72eee1d635bca7..2d0aecac5bac28c9166543e268239f6282ae7afc 100644
+--- a/src/test/kotlin/com/replaymod/gradle/preprocess/PreprocessorTests.kt
++++ b/src/test/kotlin/com/replaymod/gradle/preprocess/PreprocessorTests.kt
+@@ -31,7 +31,7 @@ class PreprocessorTests : FunSpec({
+         }
+     )
+ 
+-    with(CommentPreprocessor(vars, parsers)) {
++    with(CommentPreprocessor(' ', vars, parsers)) {
+         context("evalExpr") {
+             test("c-style truthiness of variables") {
+                 "zero".evalExpr().shouldBeFalse()
+@@ -640,7 +640,7 @@ class PreprocessorTests : FunSpec({
+                 ).shouldBe(listOf("//#if f", "//$$ original", "//#endif"))
+             }
+             test("fails when there are errors in unaffected lines") {
+-                with (CommentPreprocessor(vars, parsers)) {
++                with (CommentPreprocessor(' ', vars, parsers)) {
+                     convertSource(
+                             PreprocessTask.DEFAULT_KEYWORDS,
+                             listOf("//#if t", "original", "//#endif"),
+@@ -655,7 +655,7 @@ class PreprocessorTests : FunSpec({
+                 }
+             }
+             test("ignores errors in commented lines") {
+-                with (CommentPreprocessor(vars, parsers)) {
++                with (CommentPreprocessor(' ', vars, parsers)) {
+                     convertSource(
+                             PreprocessTask.DEFAULT_KEYWORDS,
+                             listOf("//#if f", "original", "//#endif"),
+@@ -669,6 +669,17 @@ class PreprocessorTests : FunSpec({
+                     fail.shouldBeFalse()
+                 }
+             }
++            test("tabs") {
++                with (CommentPreprocessor('\t', vars, parsers)) {
++                    fun String.convert() = convertSource(
++                        PreprocessTask.DEFAULT_KEYWORDS,
++                        lines(),
++                        lines().map { it to emptyList() },
++                        "test.java"
++                    ).joinToString("\n")
++                    "\t//#if f\n\tcode\n\t//#endif".convert().shouldBe("\t//#if f\n\t//$$ code\n\t//#endif");
++                }
++            }
+         }
+     }
+ })
